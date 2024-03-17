@@ -7,7 +7,7 @@ This project aims to fine-tune the SBERT model on specific domains using the TSD
 The project is structured in the following way:
 
 - The [data](data/) directory contains the datasets we used to train and test our models. The main dataset we used is the [SentiNews](https://www.clarin.si/repository/xmlui/handle/11356/1397#) dataset.
-- The [report](report/) directory contains various files pertaining to the report of this project, including figures, `.tex` files and the compiled `.pdf` version of the report.
+- The [report](report/) directory contains various files pertaining to the report of this project, including figures, `.tex` files and the compiled `.pdf` version of the report. The [report.pdf](report/report.pdf) file contains the rolling version of the project report.
 - The [src](src/) directory contains the complete implementation of the project.
 
 ## Installation and running
