@@ -14,10 +14,10 @@ config = {
     # - dropout_rate: The dropout rate of the classifier.
     # - freeze_automodel: Whether the Sentence Transformer model should be frozen during training.
     # - activation_function: The activation function of the hidden layers. One of 'relu', 'tanh', 'sigmoid'.
-    'model_name': 'distiluse-base-multilingual-cased',
+    'model_name': 'sentence-transformers/LaBSE',
     'num_hidden_layers': 2,
-    'hidden_layer_size': 128,
-    'dropout_rate': 0.1,
+    'hidden_layer_size': 512,
+    'dropout_rate': 0.001,
     'freeze_automodel': False,
     'activation_function': 'relu',
 
@@ -31,11 +31,11 @@ config = {
     # - epochs: The number of epochs to train the model.
     'loss_function': 'bce_with_logits',
     'optimizer': 'adam',
-    'learning_rate': 0.001,
-    'scheduler': 'linear',
+    'learning_rate': 0.01,
+    'scheduler': 'none',
     'scheduler_gamma': 0.1,
     'scheduler_step': 1,
-    'epochs': 5,
+    'epochs': 20,
 
     #### Testing parameters
     # - threshold: The threshold used for the predictions. If the probability of a class is higher than the threshold, the class is predicted.
@@ -99,7 +99,10 @@ def train():
 
             # Forward pass
             outputs = classifier(inputs)
-            label = label.view(outputs.shape).float()
+            if config['loss_function'] != 'multi_label_margin':
+                label = label.view(outputs.shape).float()
+            else:
+                label = label.view(outputs.shape).long()
             loss = criterion(outputs, label)
 
             # Backward pass
