@@ -15,10 +15,10 @@ config = {
     # - freeze_automodel: Whether the Sentence Transformer model should be frozen during training.
     # - activation_function: The activation function of the hidden layers. One of 'relu', 'tanh', 'sigmoid'.
     'model_name': 'sentence-transformers/LaBSE',
-    'num_hidden_layers': 2,
+    'num_hidden_layers': 4,
     'hidden_layer_size': 512,
-    'dropout_rate': 0.001,
-    'freeze_automodel': False,
+    'dropout_rate': None,
+    'freeze_automodel': True,
     'activation_function': 'relu',
 
     #### Training parameters
@@ -31,11 +31,11 @@ config = {
     # - epochs: The number of epochs to train the model.
     'loss_function': 'bce_with_logits',
     'optimizer': 'adam',
-    'learning_rate': 0.01,
+    'learning_rate': 0.1,
     'scheduler': 'none',
     'scheduler_gamma': 0.1,
     'scheduler_step': 1,
-    'epochs': 20,
+    'epochs': 10,
 
     #### Testing parameters
     # - threshold: The threshold used for the predictions. If the probability of a class is higher than the threshold, the class is predicted.
