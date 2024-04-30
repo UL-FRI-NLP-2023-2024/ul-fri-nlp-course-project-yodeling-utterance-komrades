@@ -11,7 +11,7 @@ config = {
     # - model_name: The name of the Sentence Transformer model that should be used to generate embeddings.
     # - num_hidden_layers: The number of hidden layers in the classifier.
     # - hidden_layer_size: The size of the hidden layers in the classifier.
-    # - dropout_rate: The dropout rate of the classifier.
+    # - dropout_rate: The dropout rate of the classifier. Can be None.
     # - freeze_automodel: Whether the Sentence Transformer model should be frozen during training.
     # - activation_function: The activation function of the hidden layers. One of 'relu', 'tanh', 'sigmoid'.
     'model_name': 'sentence-transformers/LaBSE',
