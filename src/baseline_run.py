@@ -111,7 +111,9 @@ def train():
         print('Epoch: {}, Loss: {}'.format(epoch + 1, loss.item()))
 
         if epoch % 5 == 0:
+            classifier.set_mode('eval')
             _test(classifier, test_data, test_labels, data_loader.get_label_classes())
+            classifier.set_mode('train')
 
     if config['verbose']:
         print('Train: Finished training.')
