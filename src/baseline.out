@@ -1,0 +1,22 @@
+INFO:    Setting 'NVIDIA_VISIBLE_DEVICES=all' to emulate legacy GPU binding.
+INFO:    Setting --writable-tmpfs (required by nvidia-container-cli)
+Train: Loaded train dataset.
+Train: Initialized classifier.
+Train: Initialized criterion, optimizer and scheduler.
+Train: Starting training...
+Epoch: 1, Loss: 0.6909829378128052
+Model evaluation:
+     F1 Score: 0.004518371605280629
+     Recall: 0.023097950253973952
+     Precision: 0.0026931874200577946
+Epoch: 2, Loss: 0.6910905241966248
+Epoch: 3, Loss: 0.6909990310668945
+Epoch: 4, Loss: 0.6910976767539978
+Epoch: 5, Loss: 0.6913488507270813
+Train: Finished training.
+Model evaluation:
+     F1 Score: 0.0003160298633326554
+     Recall: 0.00033049387888097565
+     Precision: 0.0003184767832562434
+Train: Finished testing.
+Train: Saving model.

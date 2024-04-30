@@ -21,7 +21,7 @@ class Classifier(nn.Module):
             output_dim (int): The dimension of the output layer, this is the number of classes that the model
                               should classify the embeddings into.
         """
-
+        super(Classifier, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
