@@ -22,7 +22,7 @@ class DataLoader:
         self.multi_label_binarizer = MultiLabelBinarizer()
         self.class_labels = []
 
-    def load_data(self) -> Tuple[List[str], List[List[str]]]:
+    def load_data(self) -> Tuple[List[List[str]], List[List[str]]]:
         """
         Loads the data from the file and returns the article bodies and the corresponding keywords.
         The keywords are encoded for multi-label classification using the MultiLabelBinarizer.
@@ -65,9 +65,10 @@ class DataLoader:
         """
         return self.multi_label_binarizer.classes_
     
-    def _load_data(self, file_path: str) -> Tuple[List[str], List[List[str]]]:
+    def _load_data(self, file_path: str) -> Tuple[List[List[str]], List[List[str]]]:
         """
         Loads the data from the file and returns the article bodies and the corresponding keywords.
+        The article bodies are chunked into smaller parts that can be handled by the SentenceTransformer.
 
         Args:
             file_path (str): The path to the file that contains the articles and keywords.
@@ -79,7 +80,35 @@ class DataLoader:
         with open(file_path, 'r', encoding='utf-8') as file:
             data = [json.loads(line) for line in file.readlines()]
             
-            articles = [article['body'] for article in data]
+            articles = [self._chunk_data(article['body']) for article in data]
             keywords = [article['keywords'].lower().split(';') for article in data]
 
         return articles, keywords
+    
+    def _chunk_data(self, data: str) -> str:
+        """
+        Chunks the given data into smaller parts that can be handled by the SentenceTransformer.
+
+        Args:
+            data (str): The data that should be chunked.
+
+        Returns:
+            str: The chunked data.
+        """
+        words = data.split(' ')
+        chunks = []
+        chunk = []
+        chunk_length = 0
+        for word in words:
+            word_length = len(word)
+            if chunk_length + word_length < 512:
+                chunk.append(word)
+                chunk_length += word_length + 1  # +1 for the space
+            else:
+                chunks.append(' '.join(chunk))
+                chunk = [word]
+                chunk_length = word_length
+        if chunk:
+            chunks.append(' '.join(chunk))
+
+        return chunks

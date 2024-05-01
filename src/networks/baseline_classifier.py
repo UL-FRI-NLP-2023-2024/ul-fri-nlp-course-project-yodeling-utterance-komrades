@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from transformers import AutoModel
 from sentence_transformers import SentenceTransformer
-from typing import Dict
+from typing import Dict, List
 
 class BaselineClassifier(nn.Module):
     """
@@ -34,6 +34,7 @@ class BaselineClassifier(nn.Module):
 
         # Load the Sentence Transformer model and set it to training mode.
         self.auto_model = SentenceTransformer(model_name) # AutoModel.from_pretrained(model_name)
+        self.auto_model = self.auto_model.to(self.device)
         self.auto_model.train()
 
         # Freeze the Sentence Transformer model if specified in the configuration. If the model is frozen,
@@ -75,51 +76,55 @@ class BaselineClassifier(nn.Module):
         # Add the output layer that has the output dimensions equal to the number of output classes.
         layers.append(nn.Linear(self.hidden_layer_size, self.output_classes))
         self.classifier = nn.Sequential(*layers)    
-        
+        self.classifier = self.classifier.to(self.device)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-    #def forward(self, input_ids=None, attention_mask=None, token_type_ids=None) -> torch.Tensor:
+    def forward(self, x: List[str]) -> torch.Tensor:
         """
-        Performs a forward pass through the BaselineClassifier. The forward pass consists of passing the input
-        through the Sentence Transformer model to generate embeddings, extracting the embeddings of the [CLS] token,
-        passing the embeddings through the classifier to get the logits.
+        Performs a forward pass through the BaselineClassifier. The forward pass consists of chunking the input
+        article into smaller parts that can be handled by the SentenceTransformer, encoding the chunks into
+        embeddings, averaging the embeddings, and passing the averaged embeddings through the classifier.
 
         Args:
-            x (torch.Tensor): The input tensor that should be classified.
+            x (List[str]): The chunks representing the article that should be classified.
 
         Returns:
             torch.Tensor: The output tensor that contains the logits of the input tensor.
         """
+        #words = x.split(' ')
 
-        #outputs = self.auto_model(x)
-        #x = self.auto_model.tokenize(x)
-        #x = self.auto_model.encode(x)
-        #x = torch.tensor(x).to(self.device)
-        
-        # inputs = self.auto_model.tokenizer(x, return_tensors="pt", padding=True, truncation=True)
-        # inputs = {key: val.to(self.device) for key, val in inputs.items()}
-        # outputs = self.auto_model(**inputs)
+        # Chunk the input article into smaller parts that can be handled by the SentenceTransformer.
+        # The size of achunk is determined by the maximum sequence length of the SentenceTransformer,
+        # where the calculation for current chunk size is determined by the tokenized word (as each 
+        # word can be tokenized into multiple tokens).
+        # chunks = []
+        # chunk = ''
+        # for word in words:
+        #     if len(self.auto_model.tokenize(chunk + word)) < self.auto_model.max_seq_length:
+        #         chunk += word
+        #     else:
+        #         chunks.append(chunk)
+        #         chunk = word + ' '
+        # if chunk:
+        #     chunks.append(chunk)
 
-        #outputs = self.auto_model(x)
-
-        # Extract the last hidden states from the output of the transformer.
-        # These states contain rich contextual information about the input data.
-        #last_hidden_state = outputs[0]
-
-        # Extract the embeddings of the [CLS] token, which is a special token that
-        # is added to the beginning of the input data, and is designed to capture
-        # overall semantic information of the input sequence.
-        # cls_embedding = last_hidden_state[:, 0, :]
-
-        # Pass the embeddings of the [CLS] token through the classifier to get the logits.
-        #logits = self.classifier(cls_embedding)
-
-        inputs = [x]
-        embeddings = self.auto_model.encode(inputs, convert_to_tensor=True)
+        # Encode all the chunks into embeddings and average them to obtain a single embedding.
+        # This method is chosen to reduce memory consumption that would be the result of a huge 
+        # number of embeddings, but it additionally solves the problem of the first-layer input
+        # dimension of the classifier.
+        embeddings = [self.auto_model.encode(chunk, convert_to_tensor=True) for chunk in x]
+        embeddings = torch.stack(embeddings, dim=0)
+        embeddings = torch.mean(embeddings, dim=0)
         embeddings = embeddings.to(self.device)
-        self.classifier = self.classifier.to(self.device)
+
         logits = self.classifier(embeddings)
         return logits
+
+        # inputs = [x]
+        # embeddings = self.auto_model.encode(inputs, convert_to_tensor=True)
+        # embeddings = embeddings.to(self.device)
+        # self.classifier = self.classifier.to(self.device)
+        # logits = self.classifier(embeddings)
+        # return logits
     
     def set_mode(self, mode: str):
         """
@@ -138,7 +143,6 @@ class BaselineClassifier(nn.Module):
             self.auto_model.eval()
         else:
             raise ValueError('Invalid mode. Supported modes are: train, eval')
-
 
     def _validate_config(self, config: Dict[str, any]):
         """

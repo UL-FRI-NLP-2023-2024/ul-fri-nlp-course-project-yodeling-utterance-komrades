@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from sklearn.metrics import f1_score, recall_score, precision_score
+from sklearn.metrics import f1_score, recall_score, precision_score, jaccard_score
 
 from networks.baseline_classifier import BaselineClassifier
 from utils.baseline_utils import get_criterion, get_optimizer, get_scheduler
@@ -15,7 +15,7 @@ config = {
     # - freeze_automodel: Whether the Sentence Transformer model should be frozen during training.
     # - activation_function: The activation function of the hidden layers. One of 'relu', 'tanh', 'sigmoid'.
     'model_name': 'sentence-transformers/LaBSE',
-    'num_hidden_layers': 4,
+    'num_hidden_layers': 2,
     'hidden_layer_size': 512,
     'dropout_rate': None,
     'freeze_automodel': True,
@@ -29,7 +29,7 @@ config = {
     # - scheduler_gamma: The gamma parameter of the learning rate scheduler.
     # - scheduler_step: The step parameter of the learning rate scheduler. Only used for the 'linear' scheduler.
     # - epochs: The number of epochs to train the model.
-    'loss_function': 'multi_label_margin', # 'multi_label_margin', # 'bce_with_logits',
+    'loss_function': 'bce_with_logits', # 'multi_label_margin', # 'multi_label_margin', # 'bce_with_logits',
     'optimizer': 'adam',
     'learning_rate': 0.1,
     'scheduler': 'none',
@@ -102,6 +102,11 @@ def train():
             if config['loss_function'] != 'multi_label_margin':
                 label = label.view(outputs.shape).float()
             else:
+                # The MultiLabelMarginLoss function requires the labels in the format of 
+                # [32, 42, 55, 76, -1, -1, ...] where positive values represent correct label indices, as
+                # opposed to BCEWithLogitsLoss or MultiLabelSoftMarginLoss, which require the labels in the
+                # format of [0, 1, 0, 1, 0, 0, ...]. Due to this difference, the labels need to be reshaped
+                # into the required format.
                 label = label.view(outputs.shape).long()
                 label = label.nonzero(as_tuple=False).contiguous().view(-1)
                 padding = torch.full((outputs.numel() - label.numel(),), -1, dtype=torch.long, device=config['device'])
@@ -193,6 +198,7 @@ def _test(classifier: BaselineClassifier, test_data: list, test_labels: list, la
         print('     F1 Score: {}'.format(f1_score(true_labels, predictions, average='samples', zero_division=0)))
         print('     Recall: {}'.format(recall_score(true_labels, predictions, average='samples', zero_division=0)))
         print('     Precision: {}'.format(precision_score(true_labels, predictions, average='samples', zero_division=0)))
+        print('     Jaccard Score: {}'.format(jaccard_score(true_labels, predictions, average='samples', zero_division=0)))
 
 def test():
     """
