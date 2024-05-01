@@ -19,7 +19,7 @@ config = {
     'hidden_layer_size': 512,
     'dropout_rate': None,
     'freeze_automodel': True,
-    'activation_function': 'relu',
+    'activation_function': 'sigmoid',
 
     #### Training parameters
     # - loss_function: The loss function used for training. One of 'bce_with_logits', 'cross_entropy', 'multi_label_soft_margin', 'multi_label_margin'.
@@ -29,7 +29,7 @@ config = {
     # - scheduler_gamma: The gamma parameter of the learning rate scheduler.
     # - scheduler_step: The step parameter of the learning rate scheduler. Only used for the 'linear' scheduler.
     # - epochs: The number of epochs to train the model.
-    'loss_function': 'bce_with_logits',
+    'loss_function': 'multi_label_margin', # 'multi_label_margin', # 'bce_with_logits',
     'optimizer': 'adam',
     'learning_rate': 0.1,
     'scheduler': 'none',
@@ -103,6 +103,11 @@ def train():
                 label = label.view(outputs.shape).float()
             else:
                 label = label.view(outputs.shape).long()
+                label = label.nonzero(as_tuple=False).contiguous().view(-1)
+                padding = torch.full((outputs.numel() - label.numel(),), -1, dtype=torch.long, device=config['device'])
+                label = torch.cat((label, padding))
+                label = label.view(1, -1)
+                label = label.to(config['device']).long()
             loss = criterion(outputs, label)
 
             # Backward pass
