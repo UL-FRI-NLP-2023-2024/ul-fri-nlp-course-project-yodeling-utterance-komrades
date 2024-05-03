@@ -90,23 +90,6 @@ class BaselineClassifier(nn.Module):
         Returns:
             torch.Tensor: The output tensor that contains the logits of the input tensor.
         """
-        #words = x.split(' ')
-
-        # Chunk the input article into smaller parts that can be handled by the SentenceTransformer.
-        # The size of achunk is determined by the maximum sequence length of the SentenceTransformer,
-        # where the calculation for current chunk size is determined by the tokenized word (as each 
-        # word can be tokenized into multiple tokens).
-        # chunks = []
-        # chunk = ''
-        # for word in words:
-        #     if len(self.auto_model.tokenize(chunk + word)) < self.auto_model.max_seq_length:
-        #         chunk += word
-        #     else:
-        #         chunks.append(chunk)
-        #         chunk = word + ' '
-        # if chunk:
-        #     chunks.append(chunk)
-
         # Encode all the chunks into embeddings and average them to obtain a single embedding.
         # This method is chosen to reduce memory consumption that would be the result of a huge 
         # number of embeddings, but it additionally solves the problem of the first-layer input
@@ -118,13 +101,6 @@ class BaselineClassifier(nn.Module):
 
         logits = self.classifier(embeddings)
         return logits
-
-        # inputs = [x]
-        # embeddings = self.auto_model.encode(inputs, convert_to_tensor=True)
-        # embeddings = embeddings.to(self.device)
-        # self.classifier = self.classifier.to(self.device)
-        # logits = self.classifier(embeddings)
-        # return logits
     
     def set_mode(self, mode: str):
         """

@@ -131,5 +131,8 @@ dmypy.json
 # containers
 src/containers/
 
+# outputs
+src/outputs/
+
 # models
 models/*.pt

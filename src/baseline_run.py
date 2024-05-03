@@ -14,12 +14,12 @@ config = {
     # - dropout_rate: The dropout rate of the classifier. Can be None.
     # - freeze_automodel: Whether the Sentence Transformer model should be frozen during training.
     # - activation_function: The activation function of the hidden layers. One of 'relu', 'tanh', 'sigmoid'.
-    'model_name': 'sentence-transformers/LaBSE',
+    'model_name': 'all-MiniLM-L12-v2', # 'sentence-transformers/LaBSE', #'all-MiniLM-L12-v2', #'sentence-transformers/LaBSE', # 'all-MiniLM-L12-v2', # 'sentence-transformers/LaBSE',
     'num_hidden_layers': 2,
-    'hidden_layer_size': 512,
+    'hidden_layer_size': 1024,
     'dropout_rate': None,
     'freeze_automodel': True,
-    'activation_function': 'sigmoid',
+    'activation_function': 'relu',
 
     #### Training parameters
     # - loss_function: The loss function used for training. One of 'bce_with_logits', 'cross_entropy', 'multi_label_soft_margin', 'multi_label_margin'.
@@ -31,15 +31,15 @@ config = {
     # - epochs: The number of epochs to train the model.
     'loss_function': 'bce_with_logits', # 'multi_label_margin', # 'multi_label_margin', # 'bce_with_logits',
     'optimizer': 'adam',
-    'learning_rate': 0.1,
+    'learning_rate': 0.01,
     'scheduler': 'none',
-    'scheduler_gamma': 0.1,
+    'scheduler_gamma': 0.01,
     'scheduler_step': 1,
     'epochs': 10,
 
     #### Testing parameters
     # - threshold: The threshold used for the predictions. If the probability of a class is higher than the threshold, the class is predicted.
-    'threshold': 0.533,
+    'threshold': 0.3, # 0.533,
 
     #### General parameters
     # - verbose: Whether to print additional information during training/testing.
@@ -70,6 +70,7 @@ def train():
 
     if config['verbose']:
         print('Train: Loaded train dataset.')
+        print('Train: Device: {}'.format(config['device']))
 
     config['output_classes'] = len(data_loader.get_label_classes())
 
@@ -111,7 +112,7 @@ def train():
                 label = label.nonzero(as_tuple=False).contiguous().view(-1)
                 padding = torch.full((outputs.numel() - label.numel(),), -1, dtype=torch.long, device=config['device'])
                 label = torch.cat((label, padding))
-                label = label.view(1, -1)
+                label = label.view(-1)
                 label = label.to(config['device']).long()
             loss = criterion(outputs, label)
 
@@ -177,19 +178,20 @@ def _test(classifier: BaselineClassifier, test_data: list, test_labels: list, la
             probs = torch.sigmoid(outputs)
             preds = (probs > config['threshold']).float()
 
-            # if config['verbose']:
-            #     # Print the 10 highest probabilities in the probs tensor
-            #     print('Highest probabilities: {}'.format(probs.squeeze().topk(10).values.cpu().numpy()))
+            if config['verbose']:
+                if i % 400 == 0:
+                    # Print the 10 highest probabilities in the probs tensor
+                    print('Highest probabilities: {}'.format(probs.squeeze().topk(10).values.cpu().numpy()))
 
             predictions.append(preds.squeeze().cpu().numpy())
             true_labels.append(label.cpu().numpy())
 
-            # if config['verbose']:
-            #     predicted_labels = [label_classes[i] for i in range(len(predictions[-1])) if predictions[-1][i].item() == 1]
-            #     true_labels = [label_classes[i] for i in range(len(true_labels[-1])) if true_labels[-1][i].item() == 1]
-# 
-            #     print('Predicted labels: {}'.format(predicted_labels))
-            #     print('True labels: {}'.format(true_labels))
+            if config['verbose']:
+                if i % 400 == 0:
+                    predicted_labels = [label_classes[i] for i in range(len(predictions[-1])) if predictions[-1][i].item() == 1]
+                    verbose_true_labels = [label_classes[i] for i in range(len(true_labels[-1])) if true_labels[-1][i].item() == 1]
+                    print('Predicted labels: {}'.format(predicted_labels))
+                    print('True labels: {}'.format(verbose_true_labels))
 
         predictions = np.array(predictions)
         true_labels = np.array(true_labels)
