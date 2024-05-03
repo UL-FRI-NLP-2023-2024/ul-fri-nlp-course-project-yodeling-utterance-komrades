@@ -28,8 +28,10 @@ class DataLoader:
         The keywords are encoded for multi-label classification using the MultiLabelBinarizer.
 
         Returns:
-            list: The list of article bodies.
-            list: The list of corresponding keywords, encoded for multi-label classification.
+            list: The list of train article bodies.
+            list: The list of train corresponding keywords, encoded for multi-label classification.
+            list: The list of test article bodies.
+            list: The list of test corresponding keywords, encoded for multi-label classification.
 
         Raises:
             ValueError: If the file path is not set.
