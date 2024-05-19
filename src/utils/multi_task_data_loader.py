@@ -9,7 +9,7 @@ class DataLoader:
     and the corresponding keywords and sentiment from the given file.
     """
 
-    def __init__(self, train_file_path, test_file_path):
+    def __init__(self, train_file_path, test_file_path, chunk=False):
         """
         Initializes the DataLoader with the given file path and instantiates the 
         MultiLabelBinarizer that is used to encode the keywords, along with the LabelEncoder
@@ -18,12 +18,14 @@ class DataLoader:
         Args:
             train_file_path (str): The path to the training file that contains the articles and keywords.
             test_file_path (str): The path to the test file that contains the articles and keywords.
+            chunk (bool): Whether the data should be chunked into smaller parts.
         """
         self.train_file_path = train_file_path
         self.test_file_path = test_file_path
         self.multi_label_binarizer = MultiLabelBinarizer()
         self.label_encoder = LabelEncoder()
         self.class_labels = []
+        self.chunk = chunk
 
     def load_data(self) -> Tuple[List[List[str]], List[List[str]], List[str], List[List[str]], List[List[str]], List[str]]:
         """
@@ -105,7 +107,10 @@ class DataLoader:
         with open(file_path, 'r', encoding='utf-8') as file:
             data = [json.loads(line) for line in file.readlines()]
             
-            articles = [self._chunk_data(article['body']) for article in data]
+            if self.chunk:
+                articles = [self._chunk_data(article['body']) for article in data]
+            else:
+                articles = [article['body'] for article in data]
             keywords = [article['keywords'].lower().split(';') for article in data]
             sentiment = [article['sentiment'].lower() for article in data]
 
