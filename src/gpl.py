@@ -8,7 +8,7 @@ from sentence_transformers import SentenceTransformer, CrossEncoder, InputExampl
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-import tqdm
+from tqdm import tqdm
 
 from utils.multi_task_data_loader import DataLoader as MultiTaskDataLoader
 from multi_task_run import config
@@ -34,7 +34,7 @@ if __name__ == '__main__':
         num_sentences += len(new_sentences)
 
         # Sentence transformers recommends to limit the number of sentences to 10-100k.
-        if num_sentences > 100_000:
+        if num_sentences > 100:
             break
 
     target_model = 'sentence-transformers/LaBSE'
@@ -85,6 +85,8 @@ if __name__ == '__main__':
         id_batch = []
         batch_size = 64
 
+        model = SentenceTransformer(target_model).cuda()
+
         embeddings = []
         for i, (query, passage) in enumerate(pairs):
             if passage not in passage_batch:
@@ -113,8 +115,15 @@ if __name__ == '__main__':
             query_batch = [pair[0] for pair in pairs[i:i_end]]
             positive_batch = [pair[1] for pair in pairs[i:i_end]]
 
+            # Convert the query batch to cuda
+            #query_batch = [torch.tensor(query).cuda() for query in query_batch]
+
             # Create query embeddings
-            query_embeddings = model.encode(query_batch, convert_to_tensor=True, show_progress_bar=False)
+            query_embeddings = model.encode(
+                query_batch, 
+                convert_to_tensor=True, 
+                show_progress_bar=False
+            ).cpu().numpy()
 
             similarities = cosine_similarity(query_embeddings, embeddings)
 
@@ -135,9 +144,11 @@ if __name__ == '__main__':
         print('3: Pseudo-labeling complete.')
 
         with open('../data/triplets.tsv', 'w', encoding='utf-8') as file:
-            file.write('\t'.join(triplets))
+            for triplet in triplets:
+                file.write('\t'.join(map(str, triplet)))
+            #file.write('\t'.join(triplets))
 
-        model = CrossEncoder(cross_encoder_name).cuda()
+        model = CrossEncoder(cross_encoder_name)
 
         label_lines = []
 
@@ -149,8 +160,9 @@ if __name__ == '__main__':
             n_score = model.predict([(q, n)])
 
             margin = p_score - n_score
+
             label_lines.append(
-                f'{q}\t{p}\t{n}\t{margin}'
+                f'{q}\t{p}\t{n}\t{str(margin[0])}'
             )
 
         print('4: Cross-encoder complete.')
@@ -166,6 +178,8 @@ if __name__ == '__main__':
 
     training_data = []
     for line in label_lines:
+        if (type(line) == str):
+            line = line.strip().split('\t')
         q, p, n, margin = line
         training_data.append(InputExample(texts=[q, p, n], label=float(margin)))
 
