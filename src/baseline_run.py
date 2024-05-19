@@ -4,7 +4,7 @@ from sklearn.metrics import f1_score, recall_score, precision_score, jaccard_sco
 
 from networks.baseline_classifier import BaselineClassifier
 from utils.baseline_utils import get_criterion, get_optimizer, get_scheduler
-from utils.data_loader import DataLoader
+from utils.baseline_data_loader import DataLoader
 
 config = {
     #### Classifier parameters
