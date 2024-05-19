@@ -128,8 +128,8 @@ def train():
             total_loss.backward()
             optimizer.step()
 
-            if scheduler:
-                scheduler.step()
+        if scheduler:
+            scheduler.step()
         print('Epoch: {}, Loss: {}'.format(epoch + 1, loss.item()))
 
         if epoch % 5 == 0:
