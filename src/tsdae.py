@@ -29,6 +29,9 @@ if __name__ == '__main__':
 
     torch.cuda.empty_cache()
 
+    print('Training TSDAE model...')
+    print('Preprocessing data...')
+
     sentence_splitter = re.compile(r'\.\s?\n?')
     sentences = []
     num_sentences = 0
@@ -40,8 +43,10 @@ if __name__ == '__main__':
         num_sentences += len(new_sentences)
 
         # Sentence transformers recommends to limit the number of sentences to 10-100k.
-        if num_sentences > 100_000:
+        if num_sentences > 15000:
             break
+
+    print('Number of sentences:', len(sentences))
 
     # This dataset class already contains the noise functionality.
     train_data = DenoisingAutoEncoderDataset(sentences)
@@ -52,8 +57,10 @@ if __name__ == '__main__':
     pooling = models.Pooling(model.get_word_embedding_dimension(), 'cls')
 
     model = SentenceTransformer(modules=[model, pooling])
+    model = model.to('cuda')
 
     loss = DenoisingAutoEncoderLoss(model=model, tie_encoder_decoder=True)
+    loss = loss.to('cuda')
 
     model.fit(
         train_objectives=[(loader, loss)],
