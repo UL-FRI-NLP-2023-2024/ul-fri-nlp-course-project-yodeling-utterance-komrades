@@ -1,4 +1,5 @@
 import re
+import json
 from sentence_transformers import SentenceTransformer, models
 from sentence_transformers.datasets import DenoisingAutoEncoderDataset
 from sentence_transformers.losses import DenoisingAutoEncoderLoss
@@ -6,6 +7,13 @@ from torch.utils.data import DataLoader
 
 from utils.multi_task_data_loader import DataLoader as MultiTaskDataLoader
 from multi_task_run import config
+
+tsdae_config = {
+    'epochs': 1,
+    'weight_decay': 0,
+    'scheduler': 'constantlr', # constantlr, warmupconstant, warmuplinear, warmupcosine
+    'optimizer_params': {'lr': 3e-5},
+}
 
 if __name__ == '__main__':
     data_loader = MultiTaskDataLoader(
@@ -34,7 +42,7 @@ if __name__ == '__main__':
     train_data = DenoisingAutoEncoderDataset(sentences)
     loader = DataLoader(train_data, batch_size=8, shuffle=True, drop_last=True)
 
-    model = models.Transformer(config['model_name'])
+    model = models.Transformer('sentence-transformers/LaBSE')
     # A pooling layer is necessary to move the output of 512 token vectors to a single sentence vector.
     pooling = models.Pooling(model.get_word_embedding_dimension(), 'cls')
 
@@ -44,12 +52,16 @@ if __name__ == '__main__':
 
     model.fit(
         train_objectives=[(loader, loss)],
-        epochs=1,
-        weight_decay=0,
-        scheduler='constantlr',
-        optimizer_params={'lr': 3e-5},
+        epochs=tsdae_config['epochs'],
+        weight_decay=tsdae_config['weight_decay'],
+        scheduler=tsdae_config['scheduler'],
+        optimizer_params=tsdae_config['optimizer_params'],
         show_progress_bar=True
     )
 
-    model.save(f'../models/sentence_transformers/tsdae_{config["model_name"]}')
+    model.save(f'../models/sentence_transformers/tsdae_{config["saved_model_name"]}')
+    with open(f'../models/sentence_transformers/tsdae_{config["saved_model_name"]}_config.json', 'w') as file:
+        json.dump(tsdae_config, file)
+
+
 
