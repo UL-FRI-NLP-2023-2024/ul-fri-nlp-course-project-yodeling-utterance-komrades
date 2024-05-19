@@ -1,3 +1,6 @@
+import nltk
+nltk.download('punkt')
+import torch
 import re
 import json
 from sentence_transformers import SentenceTransformer, models
@@ -23,6 +26,8 @@ if __name__ == '__main__':
     )
 
     train_data, train_labels, train_sentiment, test_data, test_labels, test_sentiment = data_loader.load_data()
+
+    torch.cuda.empty_cache()
 
     sentence_splitter = re.compile(r'\.\s?\n?')
     sentences = []
@@ -56,7 +61,7 @@ if __name__ == '__main__':
         weight_decay=tsdae_config['weight_decay'],
         scheduler=tsdae_config['scheduler'],
         optimizer_params=tsdae_config['optimizer_params'],
-        show_progress_bar=True
+        show_progress_bar=False
     )
 
     model.save(f'../models/sentence_transformers/tsdae_{config["saved_model_name"]}')
