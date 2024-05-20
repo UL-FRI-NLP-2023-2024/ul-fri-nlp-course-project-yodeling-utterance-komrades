@@ -9,7 +9,7 @@ class DataLoader:
     and the corresponding keywords and sentiment from the given file.
     """
 
-    def __init__(self, train_file_path, test_file_path, chunk=False):
+    def __init__(self, train_file_path, test_file_path, chunk=True):
         """
         Initializes the DataLoader with the given file path and instantiates the 
         MultiLabelBinarizer that is used to encode the keywords, along with the LabelEncoder
