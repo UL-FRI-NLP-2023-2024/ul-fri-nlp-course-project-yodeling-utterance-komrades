@@ -50,7 +50,7 @@ config = {
     'verbose': True,
     'device': 'cuda' if torch.cuda.is_available() else 'cpu',
     'mode': 'train',
-    'save_model': True,
+    'save_model': False,
     'saved_model_name': 'multi_task_classifier',
 }
 
@@ -69,8 +69,8 @@ def train():
     train_data, train_labels, train_sentiment, test_data, test_labels, test_sentiment = data_loader.load_data()
 
     if config['verbose']:
-        print('Train: Loaded train dataset.')
-        print('Train: Device: {}'.format(config['device']))
+        print('Train: Loaded train dataset.', flush=True)
+        print('Train: Device: {}'.format(config['device']), flush=True)
 
     config['output_classes'] = len(data_loader.get_label_classes())
     config['output_classes_sentiment'] = len(data_loader.get_classes_sentiment())
@@ -79,7 +79,7 @@ def train():
     classifier.set_mode('train')
 
     if config['verbose']:
-        print('Train: Initialized classifier.')
+        print('Train: Initialized classifier.', flush=True)
 
     criterion = get_criterion(config)
     criterion_sentiment = get_criterion({'loss_function': 'cross_entropy'})
@@ -87,11 +87,14 @@ def train():
     scheduler = get_scheduler(config, optimizer)
 
     if config['verbose']:
-        print('Train: Initialized criterion, optimizer and scheduler.')
-        print('Train: Starting training...')
+        print('Train: Initialized criterion, optimizer and scheduler.', flush=True)
+        print('Train: Starting training...', flush=True)
 
     for epoch in range(config['epochs']):
         for i in range(len(train_data)):
+            if config['verbose']:
+                if i % 500 == 0:
+                    print('Train: Iteration: {}'.format(i), flush=True)
             inputs = train_data[i]
             label = train_labels[i]
             label_sentiment = train_sentiment[i]
@@ -130,7 +133,7 @@ def train():
 
         if scheduler:
             scheduler.step()
-        print('Epoch: {}, Loss: {}'.format(epoch + 1, loss.item()))
+        print('Epoch: {}, Loss: {}'.format(epoch + 1, loss.item()), flush=True)
 
         if epoch % 5 == 0:
             classifier.set_mode('eval')
@@ -138,7 +141,7 @@ def train():
             classifier.set_mode('train')
 
     if config['verbose']:
-        print('Train: Finished training.')
+        print('Train: Finished training.', flush=True)
 
     # Evaluate the model
     classifier.set_mode('eval')

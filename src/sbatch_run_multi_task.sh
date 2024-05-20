@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=nlp-multi-task 
+#SBATCH --job-name=nlp-mt
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
