@@ -1,8 +1,7 @@
-import nltk
-nltk.download('punkt')
-import torch
-import re
 import json
+import re
+
+import torch
 from sentence_transformers import SentenceTransformer, models
 from sentence_transformers.datasets import DenoisingAutoEncoderDataset
 from sentence_transformers.losses import DenoisingAutoEncoderLoss

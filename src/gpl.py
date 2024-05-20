@@ -1,14 +1,15 @@
+import json
 import os
-import re
 import random
-import torch
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-from sentence_transformers import SentenceTransformer, CrossEncoder, InputExample, losses
+import re
 
-from sklearn.neighbors import NearestNeighbors
-from sklearn.metrics.pairwise import cosine_similarity
+import torch
 import numpy as np
 from tqdm import tqdm
+from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics.pairwise import cosine_similarity
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from sentence_transformers import SentenceTransformer, CrossEncoder, InputExample, losses
 
 from utils.multi_task_data_loader import DataLoader as MultiTaskDataLoader
 from multi_task_run import config
@@ -211,6 +212,8 @@ if __name__ == '__main__':
         output_path=f'../models/sentence_transformers/gpl_{config["saved_target_model"]}',
         show_progress_bar=False
     )
+    with open(f'../models/sentence_transformers/gpl_{config["saved_model_name"]}_config.json', 'w') as file:
+        json.dump(gpl_config, file)
 
     print('Model trained.')
             
