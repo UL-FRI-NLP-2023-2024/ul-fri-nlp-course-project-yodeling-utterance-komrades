@@ -43,7 +43,7 @@ if __name__ == '__main__':
         num_sentences += len(new_sentences)
 
         # Sentence transformers recommends to limit the number of sentences to 10-100k.
-        if num_sentences > 15000:
+        if num_sentences > 50000: #15000:
             break
 
     print('Number of sentences:', len(sentences))

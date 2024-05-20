@@ -13,6 +13,9 @@ from tqdm import tqdm
 from utils.multi_task_data_loader import DataLoader as MultiTaskDataLoader
 from multi_task_run import config
 
+gpl_config = {
+    'epochs': 1, 
+}
 
 if __name__ == '__main__':
     data_loader = MultiTaskDataLoader(
@@ -34,13 +37,14 @@ if __name__ == '__main__':
         num_sentences += len(new_sentences)
 
         # Sentence transformers recommends to limit the number of sentences to 10-100k.
-        if num_sentences > 100:
+        if num_sentences > 50000:
             break
 
     target_model = 'sentence-transformers/LaBSE'
-    generator_name = 't5-base' #'t5-base-multilingual-translation'
+    generator_name = 'google/mt5-base'
+    #generator_name = 't5-base' #'t5-base-multilingual-translation'
     retriever_names = ['all-MiniLM-L6-v2', 'all-MiniLM-L12-v2']
-    cross_encoder_name = 'bert-base-multilingual-cased'
+    cross_encoder_name = 'sentence-transformers/LaBSE' # 'bert-base-multilingual-cased'
 
     print('Sentences generated')
     print('Generating triplets...')
@@ -56,17 +60,13 @@ if __name__ == '__main__':
         pairs = []
         counter = 0
         for sentence in sentences:
-            
-            if counter % 100 == 0:
-                print(f'Generating query {counter}...')
-            counter += 1
 
             inputs = tokenizer(sentence, return_tensors='pt')
             inputs = {key: val.cuda() for key, val in inputs.items()}
             outputs = model.generate(
                 input_ids=inputs['input_ids'],
                 attention_mask=inputs['attention_mask'],
-                max_length=64,
+                max_length=256,
                 do_sample=True,
                 top_p=0.95,
                 num_return_sequences=1
@@ -75,8 +75,11 @@ if __name__ == '__main__':
             query = tokenizer.decode(outputs[0], skip_special_tokens=True)
             pairs.append((query, sentence))
 
-            # query = tokenizer.decode(outputs[0], skip_special_tokens=True)
-            # print(query)
+            if counter % 100 == 0:
+                print(f'Generating query {counter}...')
+                print(f'Query: {query}')
+                print(f'Passage: {sentence}')
+            counter += 1
 
         print('1: Query generation complete.')
 
@@ -102,10 +105,6 @@ if __name__ == '__main__':
 
         print('2: Negative mining complete.')
 
-        # Fit the nearest neighbors model
-        # nn_model = NearestNeighbors(n_neighbors=5, algorithm='auto', metric='cosine')
-        # nn_model.fit(embeddings)
-
         # Step 3: Pseudo-labeling.
         batch_size = 100
         triplets = []
@@ -114,9 +113,6 @@ if __name__ == '__main__':
             i_end = min(i + batch_size, len(pairs))
             query_batch = [pair[0] for pair in pairs[i:i_end]]
             positive_batch = [pair[1] for pair in pairs[i:i_end]]
-
-            # Convert the query batch to cuda
-            #query_batch = [torch.tensor(query).cuda() for query in query_batch]
 
             # Create query embeddings
             query_embeddings = model.encode(
@@ -146,7 +142,6 @@ if __name__ == '__main__':
         with open('../data/triplets.tsv', 'w', encoding='utf-8') as file:
             for triplet in triplets:
                 file.write('\t'.join(map(str, triplet)))
-            #file.write('\t'.join(triplets))
 
         model = CrossEncoder(cross_encoder_name)
 
@@ -207,15 +202,14 @@ if __name__ == '__main__':
 
     print('Training model...')
 
-    epochs = 1
-    warmup_steps = int(len(loader) * epochs * 0.1)
+    warmup_steps = int(len(loader) * gpl_config['epochs'] * 0.1)
 
     model.fit(
         train_objectives=[(loader, loss)],
-        epochs=epochs,
+        epochs=gpl_config['epochs'],
         warmup_steps=warmup_steps,
-        output_path=f'../models/sentence_transformers/gpl_{target_model}',
-        show_progress_bar=True
+        output_path=f'../models/sentence_transformers/gpl_{config["saved_target_model"]}',
+        show_progress_bar=False
     )
 
     print('Model trained.')
