@@ -5,9 +5,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1 #--gpus=1
-#SBATCH --mem=0
 #SBATCH --output=tsdae.out
-#SBATCH --reservation=fri
 #SBATCH --time=04:00:00
 
 module load CUDA/12.1.1

@@ -33,7 +33,10 @@ class MultiTaskClassifier(nn.Module):
         self._extract_config(config)
 
         # Load the Sentence Transformer model and set it to training mode.
-        self.auto_model = SentenceTransformer(model_name) # AutoModel.from_pretrained(model_name)
+        if model_name.startswith('..'):
+            self.auto_model = SentenceTransformer.load(model_name)
+        else:
+            self.auto_model = SentenceTransformer(model_name) # AutoModel.from_pretrained(model_name)
         self.auto_model = self.auto_model.to(self.device)
         self.auto_model.train()
 

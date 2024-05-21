@@ -15,7 +15,7 @@ from utils.multi_task_data_loader import DataLoader as MultiTaskDataLoader
 from multi_task_run import config
 
 gpl_config = {
-    'epochs': 1, 
+    'epochs': 5, 
 }
 
 if __name__ == '__main__':
@@ -209,7 +209,7 @@ if __name__ == '__main__':
         train_objectives=[(loader, loss)],
         epochs=gpl_config['epochs'],
         warmup_steps=warmup_steps,
-        output_path=f'../models/sentence_transformers/gpl_{config["saved_target_model"]}',
+        output_path=f'../models/sentence_transformers/gpl_{config["saved_model_name"]}',
         show_progress_bar=False
     )
     with open(f'../models/sentence_transformers/gpl_{config["saved_model_name"]}_config.json', 'w') as file:

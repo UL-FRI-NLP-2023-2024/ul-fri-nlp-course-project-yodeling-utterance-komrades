@@ -14,7 +14,7 @@ config = {
     # - dropout_rate: The dropout rate of the classifier. Can be None.
     # - freeze_automodel: Whether the Sentence Transformer model should be frozen during training.
     # - activation_function: The activation function of the hidden layers. One of 'relu', 'tanh', 'sigmoid'.
-    'model_name': 'sentence-transformers/LaBSE', # 'sentence-transformers/LaBSE', #'all-MiniLM-L12-v2', #'sentence-transformers/LaBSE', # 'all-MiniLM-L12-v2', # 'sentence-transformers/LaBSE',
+    'model_name': '../models/sentence_transformers/tsdae_multi_task_classifier', # 'sentence-transformers/LaBSE', # 'sentence-transformers/LaBSE', #'all-MiniLM-L12-v2', #'sentence-transformers/LaBSE', # 'all-MiniLM-L12-v2', # 'sentence-transformers/LaBSE',
     'num_hidden_layers': 2,
     'hidden_layer_size': 1024,
     'dropout_rate': None,
