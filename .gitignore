@@ -133,6 +133,19 @@ src/containers/
 
 # outputs
 src/outputs/
+src/*.out
 
 # models
 models/*.pt
+models/sentence_transformers/
+
+# prototyping
+src/prototyping.py
+src/sbatch_run_prototyping.sh
+
+# misc
+src/sbatch_run_multi_task_gpl.sh
+src/sbatch_run_multi_task_tsdae.sh
+
+# data
+data/*.tsv

@@ -6,7 +6,6 @@ import re
 import torch
 import numpy as np
 from tqdm import tqdm
-from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from sentence_transformers import SentenceTransformer, CrossEncoder, InputExample, losses
@@ -15,40 +14,45 @@ from utils.multi_task_data_loader import DataLoader as MultiTaskDataLoader
 from multi_task_run import config
 
 gpl_config = {
-    'epochs': 5, 
+    # Training parameters.
+    'epochs': 1,
+    'weight_decay': 0.0,
+    'scheduler': 'constantlr', # constantlr, warmupconstant, warmuplinear, warmupcosine
+    'optimizer_params': {'lr': 0.0001},
+    'batch_size': 32,
+
+    # Data preprocessing parameters.
+    'num_sentences': 20000,
+    'target-model': 'sentence-transformers/LaBSE',
+    'generator-model': 'google/mt5-base',
+    'cross-encoder-model': 'sentence-transformers/LaBSE'
 }
 
 if __name__ == '__main__':
     data_loader = MultiTaskDataLoader(
         '../data/SentiNews_sentiment/SentiNews_train.json', 
         '../data/SentiNews_sentiment/SentiNews_test.json',
-        chunk=False
+        chunk=True
     )
 
     train_data, train_labels, train_sentiment, test_data, test_labels, test_sentiment = data_loader.load_data()
 
-    sentence_splitter = re.compile(r'\.\s?\n?')
     sentences = []
     num_sentences = 0
     for row in train_data:
-        new_sentences = sentence_splitter.split(row)
-        new_sentences = [sentence for sentence in new_sentences if len(sentence) > 10]
-
-        sentences.extend(new_sentences)
-        num_sentences += len(new_sentences)
-
-        # Sentence transformers recommends to limit the number of sentences to 10-100k.
-        if num_sentences > 50000:
+        for chunk in row:
+            sentences.append(chunk)
+            num_sentences += 1
+        
+        if num_sentences > gpl_config['num_sentences']:
             break
 
-    target_model = 'sentence-transformers/LaBSE'
-    generator_name = 'google/mt5-base'
-    #generator_name = 't5-base' #'t5-base-multilingual-translation'
-    retriever_names = ['all-MiniLM-L6-v2', 'all-MiniLM-L12-v2']
-    cross_encoder_name = 'sentence-transformers/LaBSE' # 'bert-base-multilingual-cased'
+    target_model = gpl_config['target-model']
+    generator_name = gpl_config['generator-model']
+    cross_encoder_name = gpl_config['cross-encoder-model']
 
-    print('Sentences generated')
-    print('Generating triplets...')
+    print('Sentences generated', flush=True)
+    print('Generating triplets...', flush=True)
 
     # Check if the data file already exists.
     if not os.path.exists('../data/triplets.tsv'):
@@ -77,12 +81,12 @@ if __name__ == '__main__':
             pairs.append((query, sentence))
 
             if counter % 100 == 0:
-                print(f'Generating query {counter}...')
-                print(f'Query: {query}')
-                print(f'Passage: {sentence}')
+                print(f'Generating query {counter}...', flush=True)
+                print(f'Query: {query}', flush=True)
+                print(f'Passage: {sentence}', flush=True)
             counter += 1
 
-        print('1: Query generation complete.')
+        print('1: Query generation complete.', flush=True)
 
         # Step 2: Negative mining.
         passage_batch = []
@@ -104,7 +108,7 @@ if __name__ == '__main__':
 
         embeddings = np.array(embeddings)
 
-        print('2: Negative mining complete.')
+        print('2: Negative mining complete.', flush=True)
 
         # Step 3: Pseudo-labeling.
         batch_size = 100
@@ -138,7 +142,7 @@ if __name__ == '__main__':
                         triplets.append((query, positive, negative))
                         break 
 
-        print('3: Pseudo-labeling complete.')
+        print('3: Pseudo-labeling complete.', flush=True)
 
         with open('../data/triplets.tsv', 'w', encoding='utf-8') as file:
             for triplet in triplets:
@@ -161,7 +165,7 @@ if __name__ == '__main__':
                 f'{q}\t{p}\t{n}\t{str(margin[0])}'
             )
 
-        print('4: Cross-encoder complete.')
+        print('4: Cross-encoder complete.', flush=True)
 
         with open('../data/triplet_margins.tsv', 'w', encoding='utf-8') as file:
             file.write('\n'.join(label_lines))
@@ -184,13 +188,13 @@ if __name__ == '__main__':
         Positive: {training_data[0].texts[1]}
         Negative: {training_data[0].texts[2]}
         Margin: {training_data[0].label}
-    """)
+    """, flush=True)
     
-    print('Training data generated.')
+    print('Training data generated.', flush=True)
 
     torch.cuda.empty_cache()
 
-    batch_size = 32
+    batch_size = gpl_config['batch_size']
 
     loader = torch.utils.data.DataLoader(
         training_data,
@@ -201,13 +205,16 @@ if __name__ == '__main__':
     model = SentenceTransformer(target_model).cuda()
     loss = losses.MarginMSELoss(model).cuda()
 
-    print('Training model...')
+    print('Training model...', flush=True)
 
     warmup_steps = int(len(loader) * gpl_config['epochs'] * 0.1)
 
     model.fit(
         train_objectives=[(loader, loss)],
         epochs=gpl_config['epochs'],
+        weight_decay=gpl_config['weight_decay'],
+        scheduler=gpl_config['scheduler'],
+        optimizer_params=gpl_config['optimizer_params'],
         warmup_steps=warmup_steps,
         output_path=f'../models/sentence_transformers/gpl_{config["saved_model_name"]}',
         show_progress_bar=False
@@ -215,6 +222,4 @@ if __name__ == '__main__':
     with open(f'../models/sentence_transformers/gpl_{config["saved_model_name"]}_config.json', 'w') as file:
         json.dump(gpl_config, file)
 
-    print('Model trained.')
-            
-
+    print('Model trained.', flush=True)

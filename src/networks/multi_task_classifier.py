@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from transformers import AutoModel
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, models
 from typing import Dict, List
 
 class MultiTaskClassifier(nn.Module):
@@ -31,12 +31,18 @@ class MultiTaskClassifier(nn.Module):
 
         self._validate_config(config)
         self._extract_config(config)
+        self.has_printed = False
 
-        # Load the Sentence Transformer model and set it to training mode.
-        if model_name.startswith('..'):
-            self.auto_model = SentenceTransformer.load(model_name)
+        import os
+        if os.path.exists(model_name):
+            print('Model path exists:', model_name)
         else:
-            self.auto_model = SentenceTransformer(model_name) # AutoModel.from_pretrained(model_name)
+            print('Model path does not exist:', model_name)
+
+        self.auto_model = SentenceTransformer(model_name) # AutoModel.from_pretrained(model_name)
+        print('Loaded model from path:', model_name)
+        print('Model:', self.auto_model)
+        print('Meta data:', type(self.auto_model._first_module()))
         self.auto_model = self.auto_model.to(self.device)
         self.auto_model.train()
 
@@ -106,6 +112,10 @@ class MultiTaskClassifier(nn.Module):
         embeddings = torch.stack(embeddings, dim=0)
         embeddings = torch.mean(embeddings, dim=0)
         embeddings = embeddings.to(self.device)
+
+        if not self.has_printed:
+            print(embeddings)
+            self.has_printed = True
 
         # Both output heads share the same classifier body, but differ only in the output layer.
         # Layer fc1 is used for the multi-label classifier (keywords), while layer fc2 is used 

@@ -14,8 +14,8 @@ config = {
     # - dropout_rate: The dropout rate of the classifier. Can be None.
     # - freeze_automodel: Whether the Sentence Transformer model should be frozen during training.
     # - activation_function: The activation function of the hidden layers. One of 'relu', 'tanh', 'sigmoid'.
-    'model_name': '../models/sentence_transformers/tsdae_multi_task_classifier', # 'sentence-transformers/LaBSE', # 'sentence-transformers/LaBSE', #'all-MiniLM-L12-v2', #'sentence-transformers/LaBSE', # 'all-MiniLM-L12-v2', # 'sentence-transformers/LaBSE',
-    'num_hidden_layers': 2,
+    'model_name': '../models/sentence_transformers/gpl_multi_task_classifier', #'sentence-transformers/LaBSE', '../models/sentence_transformers/tsdae_multi_task_classifier'
+    'num_hidden_layers': 4,
     'hidden_layer_size': 1024,
     'dropout_rate': None,
     'freeze_automodel': True,
@@ -31,7 +31,7 @@ config = {
     # - epochs: The number of epochs to train the model.
     'loss_function': 'bce_with_logits', # 'multi_label_margin', # 'multi_label_margin', # 'bce_with_logits',
     'optimizer': 'adam',
-    'learning_rate': 0.01,
+    'learning_rate': 0.0001, 
     'scheduler': 'none',
     'scheduler_gamma': 0.01,
     'scheduler_step': 1,
@@ -182,7 +182,6 @@ def _test(classifier: MultiTaskClassifier, test_data: list, test_labels: list, t
             label_sentiment = test_sentiment[i]
 
             # Convert the inputs and labels to tensors
-            #inputs = torch.tensor(inputs).to(config['device'])
             label = torch.tensor(label).to(config['device'])
             label_sentiment = torch.tensor(label_sentiment).to(config['device'])
 
