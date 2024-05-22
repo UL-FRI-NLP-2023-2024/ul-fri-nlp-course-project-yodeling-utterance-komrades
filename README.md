@@ -43,7 +43,7 @@ To set up this project on the Arnes HPC, follow the steps below:
     - NOTE: If you want to run the TSDAE or GPL finetuning methods, you will have to manually download the nltk 'punkt' dataset and place it in your home folder:
         - First, create a directory called `nltk_data` in your home folder.
         - Next, download and extract the nltk 'punkt' dataset, available here: [https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/tokenizers/punkt.zip](https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/tokenizers/punkt.zip).
-        - In the `nltk_data` directory, add a subdirectory called `tokenziers`.
+        - In the `nltk_data` directory, add a subdirectory called `tokenizers`.
         - Place the punkt directory you downloaded into the `nltk_data/tokenizers/` directory.
 
 Additional information about possible modifications is found in the README.md file in the [src](src/) directory.
