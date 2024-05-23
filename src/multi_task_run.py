@@ -31,7 +31,7 @@ config = {
     # - epochs: The number of epochs to train the model.
     'loss_function': 'bce_with_logits', # 'multi_label_margin', # 'multi_label_margin', # 'bce_with_logits',
     'optimizer': 'adam',
-    'learning_rate': 0.0001, 
+    'learning_rate': 0.00001, 
     'scheduler': 'none',
     'scheduler_gamma': 0.01,
     'scheduler_step': 1,

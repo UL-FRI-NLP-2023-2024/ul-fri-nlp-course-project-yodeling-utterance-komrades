@@ -34,7 +34,7 @@ To set up this project on the Arnes HPC, follow the steps below:
 3. Move into the `containers` directory and run the following command: `singularity build ./container-torch.sif docker://pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime`
 4. Install the required packages (available in the `requirements.txt` file in the [src](src/) directory)
     - The packages must be installed using the following command `singularity exec ./containers/container-torch.sif pip install <package-name>`
-    - Not all packages from the `requirements.txt` file must be installed. If installing by hand, simply install sentence-transformers, scikit-learn, numpy, nltk, transformers and tqdm.  
+    - Not all packages from the `requirements.txt` file must be installed. If installing by hand, simply install sentence-transformers, scikit-learn, numpy, nltk, transformers, tqdm, sentencepiece and protobuf.  
 5. Run one of the following files:
     - `sbatch sbatch_run.sh` to run the baseline training/testing code. This will only train/test the baseline classifier.
     - `sbatch sbatch_run_multi_task.sh.py` to run the multi task classifier training/testing code.

@@ -16,15 +16,15 @@ from multi_task_run import config
 gpl_config = {
     # Training parameters.
     'epochs': 1,
-    'weight_decay': 0.0,
+    'weight_decay': 0.01,
     'scheduler': 'constantlr', # constantlr, warmupconstant, warmuplinear, warmupcosine
-    'optimizer_params': {'lr': 0.0001},
-    'batch_size': 32,
+    'optimizer_params': {'lr': 0.00001},
+    'batch_size': 8,
 
     # Data preprocessing parameters.
     'num_sentences': 20000,
     'target-model': 'sentence-transformers/LaBSE',
-    'generator-model': 'google/mt5-base',
+    'generator-model': 'bkoloski/slv_doc2query', #'google/mt5-base', #'t5-base', #'t5-base', #'google/mt5-base',# 'facebook/mbart-large-50',
     'cross-encoder-model': 'sentence-transformers/LaBSE'
 }
 
@@ -32,20 +32,33 @@ if __name__ == '__main__':
     data_loader = MultiTaskDataLoader(
         '../data/SentiNews_sentiment/SentiNews_train.json', 
         '../data/SentiNews_sentiment/SentiNews_test.json',
-        chunk=True
+        chunk=False
     )
 
     train_data, train_labels, train_sentiment, test_data, test_labels, test_sentiment = data_loader.load_data()
 
+    splitter = re.compile(r'\.\s?\n?')
     sentences = []
     num_sentences = 0
     for row in train_data:
-        for chunk in row:
-            sentences.append(chunk)
-            num_sentences += 1
-        
+        new_sentences = splitter.split(row)
+        new_sentences = [line for line in new_sentences if len(line) > 10]
+        # we will need a list of sentences (remove too short ones above)
+        sentences.extend(new_sentences)
+        # the full OSCAR en corpus is huge, we don't need all that data
+        num_sentences += len(new_sentences)
         if num_sentences > gpl_config['num_sentences']:
+            # Sentence transformers recommends 10-100K sentences for training
             break
+
+
+    #for row in train_data:
+    #    for chunk in row:
+    #        sentences.append(chunk)
+    #        num_sentences += 1
+    #    
+    #    if num_sentences > gpl_config['num_sentences']:
+    #        break
 
     target_model = gpl_config['target-model']
     generator_name = gpl_config['generator-model']
@@ -71,13 +84,16 @@ if __name__ == '__main__':
             outputs = model.generate(
                 input_ids=inputs['input_ids'],
                 attention_mask=inputs['attention_mask'],
-                max_length=256,
+                max_length=512,
                 do_sample=True,
                 top_p=0.95,
+                num_beams=5,
+                early_stopping=True,
                 num_return_sequences=1
             ).cpu()
 
             query = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
             pairs.append((query, sentence))
 
             if counter % 100 == 0:
