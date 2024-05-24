@@ -32,7 +32,7 @@ To set up this project on the Arnes HPC, follow the steps below:
 1. Clone this repository into your desired location
 2. In the [src](src/) directory create a directory called `containers`.
 3. Move into the `containers` directory and run the following command: `singularity build ./container-torch.sif docker://pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime`
-4. Install the required packages (available in the `requirements.txt` file in the [src](src/) directory)
+4. Install the required packages using Conda (available in the `requirements.txt` file in the [src](src/) directory)
     - The packages must be installed using the following command `singularity exec ./containers/container-torch.sif pip install <package-name>`
     - Not all packages from the `requirements.txt` file must be installed. If installing by hand, simply install sentence-transformers, scikit-learn, numpy, nltk, transformers==4.39.3, tqdm, sentencepiece and protobuf.  
 5. Run one of the following files:
