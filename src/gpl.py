@@ -15,14 +15,14 @@ from multi_task_run import config
 
 gpl_config = {
     # Training parameters.
-    'epochs': 1,
+    'epochs': 10,
     'weight_decay': 0.01,
-    'scheduler': 'constantlr', # constantlr, warmupconstant, warmuplinear, warmupcosine
-    'optimizer_params': {'lr': 0.00001},
-    'batch_size': 8,
+    'scheduler': 'warmuplinear', #'constantlr', # constantlr, warmupconstant, warmuplinear, warmupcosine
+    'optimizer_params': {'lr': 1e-5},
+    'batch_size': 32,
 
     # Data preprocessing parameters.
-    'num_sentences': 20000,
+    'num_sentences': 10000,
     'target-model': 'sentence-transformers/LaBSE',
     'generator-model': 'bkoloski/slv_doc2query', #'google/mt5-base', #'t5-base', #'t5-base', #'google/mt5-base',# 'facebook/mbart-large-50',
     'cross-encoder-model': 'sentence-transformers/LaBSE'
@@ -43,12 +43,9 @@ if __name__ == '__main__':
     for row in train_data:
         new_sentences = splitter.split(row)
         new_sentences = [line for line in new_sentences if len(line) > 10]
-        # we will need a list of sentences (remove too short ones above)
         sentences.extend(new_sentences)
-        # the full OSCAR en corpus is huge, we don't need all that data
         num_sentences += len(new_sentences)
         if num_sentences > gpl_config['num_sentences']:
-            # Sentence transformers recommends 10-100K sentences for training
             break
 
 
